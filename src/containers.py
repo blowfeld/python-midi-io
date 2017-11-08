@@ -5,7 +5,7 @@ class Pattern(list):
         self.format = format
         self.resolution = resolution
         self.tick_relative = tick_relative
-        super(Pattern, self).__init__(tracks)
+        super().__init__(tracks)
 
     def __repr__(self):
         return "midi.Pattern(format=%r, resolution=%r, tracks=\\\n%s)" % \
@@ -25,9 +25,9 @@ class Pattern(list):
         if isinstance(item, slice):
             indices = item.indices(len(self))
             return Pattern(resolution=self.resolution, format=self.format,
-                            tracks=(super(Pattern, self).__getitem__(i) for i in range(*indices)))
+                            tracks=(super().__getitem__(i) for i in range(*indices)))
         else:
-            return super(Pattern, self).__getitem__(item)
+            return super().__getitem__(item)
 
     def __getslice__(self, i, j):
         # The deprecated __getslice__ is still called when subclassing built-in types
@@ -37,7 +37,7 @@ class Pattern(list):
 class Track(list):
     def __init__(self, events=[], tick_relative=True):
         self.tick_relative = tick_relative
-        super(Track, self).__init__(events)
+        super().__init__(events)
 
     def make_ticks_abs(self):
         if (self.tick_relative):
@@ -58,9 +58,9 @@ class Track(list):
     def __getitem__(self, item):
         if isinstance(item, slice):
             indices = item.indices(len(self))
-            return Track((super(Track, self).__getitem__(i) for i in range(*indices)))
+            return Track((super().__getitem__(i) for i in range(*indices)))
         else:
-            return super(Track, self).__getitem__(item)
+            return super().__getitem__(item)
 
     def __getslice__(self, i, j):
         # The deprecated __getslice__ is still called when subclassing built-in types

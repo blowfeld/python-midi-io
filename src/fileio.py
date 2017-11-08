@@ -1,5 +1,6 @@
 from .containers import *
 from .events import *
+from .eventio import *
 from struct import unpack, pack
 from .constants import *
 from .util import *
@@ -10,7 +11,7 @@ class FileReader(object):
         for track in pattern:
             self.parse_track(midifile, track)
         return pattern
-        
+
     def parse_file_header(self, midifile):
         # First four bytes are MIDI header
         magic = midifile.read(4)
@@ -31,7 +32,7 @@ class FileReader(object):
         if hdrsz > DEFAULT_MIDI_HEADER_SIZE:
             midifile.read(hdrsz - DEFAULT_MIDI_HEADER_SIZE)
         return Pattern(tracks=tracks, resolution=resolution, format=format)
-            
+
     def parse_track_header(self, midifile):
         # First four bytes are Track header
         magic = midifile.read(4)
@@ -58,41 +59,42 @@ class FileReader(object):
         # next byte is status message
         stsmsg = next(trackdata)
         # is the event a MetaEvent?
-        if MetaEvent.is_event(stsmsg):
+        if EVENTIO_REGISTRY.is_meta_event(stsmsg):
             cmd = next(trackdata)
-            if cmd not in EventRegistry.MetaEvents:
-                raise Warning("Unknown Meta MIDI Event: " + repr(cmd))
-            cls = EventRegistry.MetaEvents[cmd]
+            # if cmd not in EventRegistry.MetaEvents:
+            #     raise Warning("Unknown Meta MIDI Event: " + repr(cmd))
+            cls = EVENTIO_REGISTRY.get_meta_event(cmd)
             datalen = read_varlen(trackdata)
             data = [next(trackdata) for x in range(datalen)]
-            return cls(tick=tick, data=data)
+            return cls.from_data(tick=tick, data=data)
         # is this event a Sysex Event?
-        elif SysexEvent.is_event(stsmsg):
+        elif EVENTIO_REGISTRY.is_sysex_event(stsmsg):
             data = []
             while True:
                 datum = next(trackdata)
                 if datum == 0xF7:
                     break
                 data.append(datum)
-            return SysexEvent(tick=tick, data=data)
+
+            cls = EVENTIO_REGISTRY.get_sysex_event(stsmsg)
+
+            return cls.from_data(tick=tick, data=data)
         # not a Meta MIDI event or a Sysex event, must be a general message
         else:
-            key = stsmsg & 0xF0
-            if key not in EventRegistry.Events:
+            if not EVENTIO_REGISTRY.is_midi_event(stsmsg):
                 assert self.RunningStatus, ("Bad byte value", tick, stsmsg, bytes(trackdata))
                 data = []
-                key = self.RunningStatus & 0xF0
-                cls = EventRegistry.Events[key]
+                cls = EVENTIO_REGISTRY.get_midi_event(self.RunningStatus)
                 channel = self.RunningStatus & 0x0F
                 data.append(stsmsg)
                 data += [next(trackdata) for x in range(cls.length - 1)]
-                return cls(tick=tick, channel=channel, data=data)
+                return cls.from_data(tick=tick, channel=channel, data=data)
             else:
                 self.RunningStatus = stsmsg
-                cls = EventRegistry.Events[key]
+                cls = EVENTIO_REGISTRY.get_midi_event(stsmsg)
                 channel = self.RunningStatus & 0x0F
                 data = [next(trackdata) for x in range(cls.length)]
-                return cls(tick=tick, channel=channel, data=data)
+                return cls.from_data(tick=tick, channel=channel, data=data)
         raise Warning("Unknown MIDI Event: " + repr(stsmsg))
 
 class FileWriter(object):
@@ -109,24 +111,26 @@ class FileWriter(object):
             length = len(pattern)
         # First four bytes are MIDI header
         packdata = pack(">LHHH", 6,
-                        pattern.format, 
+                        pattern.format,
                         length,
                         pattern.resolution)
         self.file.write(b'MThd' + packdata)
-            
+
 
     def write_track(self, track):
         hlen = len(self.encode_track_header(0))
         buf = bytearray(b'0'*hlen)
         for event in track:
-            buf.extend(self.encode_midi_event(event))
+            binary_event = EVENTIO_REGISTRY.get_binary_type(type(event)) \
+                    .copy_from(event)
+            buf.extend(self.encode_midi_event(binary_event))
         buf[:hlen] = self.encode_track_header(len(buf)-hlen)
         self.file.write(buf)
 
     def write_track_header(self,track=None):
         trklen = 1 if track is None else track if isinstance(track,int) else len(track)
         self.file.write(self.encode_track_header(trklen))
-        
+
     def encode_track_header(self, trklen):
         return b'MTrk' + pack(">L", trklen)
 
@@ -134,7 +138,7 @@ class FileWriter(object):
         # be sure to write the track and pattern headers first
         # can stream to timidity or fluidsynth this way
         self.file.write(self.encode_midi_event(event))
-        
+
     def encode_midi_event(self, event):
         ret = bytearray()
         #assert hasattr(event,'tick'), event
@@ -143,7 +147,7 @@ class FileWriter(object):
         # is the event a MetaEvent?
         if isinstance(event, MetaEvent):
             ret.append(event.statusmsg)
-            ret.append(event.metacommand)
+            ret.append(event.meta_command)
             ret.extend(write_varlen(len(event.data)))
             ret.extend(event.data)
         # is this event a Sysex Event?
@@ -152,11 +156,11 @@ class FileWriter(object):
             ret.extend(event.data)
             ret.append(0xF7)
         # not a Meta MIDI event or a Sysex event, must be a general message
-        elif isinstance(event, Event):
+        elif isinstance(event, MidiEvent):
             # why in the heeeeeeeeelp would you not write the status message
             # here? doesn't matter if it's the same as last time. the byte
             # needs to be there!
-            
+
             ret.append(event.statusmsg | event.channel)
             ret.extend(event.data)
         else:
