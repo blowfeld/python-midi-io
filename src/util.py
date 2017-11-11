@@ -1,3 +1,4 @@
+from struct import unpack, pack
 
 def read_varlen(data):
     NEXTBYTE = 1
@@ -36,3 +37,14 @@ def write_varlen(value):
         res = bytes((b1,))
     return res
 
+def read_long(byte_like):
+    return unpack(">L", byte_like)[0]
+
+def read_short(byte_like):
+    return unpack(">H", byte_like)[0]
+
+def long_to_bytes(long_value):
+    return pack(">L", long_value)
+
+def short_to_bytes(short_value):
+    return pack(">H", short_value)
