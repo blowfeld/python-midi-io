@@ -1,4 +1,4 @@
-from pprint import pformat, pprint
+from pprint import pformat
 
 class Pattern(list):
     def __init__(self, tracks=[], resolution=220, format=1, tick_relative=True):

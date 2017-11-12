@@ -1,5 +1,4 @@
 import inspect
-import sys
 from .events import *
 
 class EventRegistry:
@@ -84,14 +83,14 @@ class EventRegistry:
 
 EVENTIO_REGISTRY = EventRegistry()
 
-"""
-Add an adapter function from the base class to the class and register the class.
-
-The added adapter function can be called with any subclass of the provided base
-class and will invoke the constructor of the decorated class. For the constructor
-call the values will be read from the base class properties with the same names.
-"""
 def copy_from(base):
+    """
+    Add an adapter function from the base class to the class and register the class.
+
+    The added adapter function can be called with any subclass of the provided base
+    class and will invoke the constructor of the decorated class. For the constructor
+    call the values will be read from the base class properties with the same names.
+    """
     def decorator(clazz):
         def copy_method(cls, base_instance):
             if isinstance(base_instance, clazz):
@@ -112,11 +111,6 @@ def copy_from(base):
     return decorator
 
 
-"""
-NoteEvent is a special subclass of Event that is not meant to
-be used as a concrete class.  It defines the generalities of NoteOn
-and NoteOff events.
-"""
 class BinaryNoteEventMixin:
     length = 2
 

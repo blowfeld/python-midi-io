@@ -1,5 +1,3 @@
-from struct import unpack, pack
-
 from .constants import *
 from .containers import *
 from .events import *

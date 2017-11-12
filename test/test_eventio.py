@@ -1,7 +1,7 @@
 from pprint import pprint
 import unittest
-from midi.events import *
-from midi.eventio import *
+from midiio.events import *
+from midiio.eventio import *
 
 class TestEventsIO(unittest.TestCase):
     def test_registry(self):

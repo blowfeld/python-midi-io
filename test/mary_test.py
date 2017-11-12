@@ -1,5 +1,5 @@
-from midi.events import *
-from midi.containers import *
+from midiio.events import *
+from midiio.containers import *
 
 MARY_MIDI = Pattern(tracks=[[TimeSignatureMetaEvent(tick=0, nominator=4,
     denominator=2, metronome=24, thirtyseconds_per_quarter=8),

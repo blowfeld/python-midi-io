@@ -39,11 +39,6 @@ class MidiEvent(_AbstractEvent):
         return self._channel
 
 
-"""
-NoteEvent is a special subclass of Event that is not meant to
-be used as a concrete class.  It defines the generalities of NoteOn
-and NoteOff events.
-"""
 class _NoteEvent(MidiEvent):
     def __init__(self, tick=None, pitch=None, velocity=None, channel=0):
         super().__init__(tick, channel)
