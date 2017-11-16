@@ -36,47 +36,52 @@ It is easy to build a MIDI track from scratch.
 
 <pre>
 import midi
-# Instantiate a MIDI Pattern (contains a list of tracks)
-pattern = midi.Pattern()
-# Instantiate a MIDI Track (contains a list of MIDI events)
-track = midi.Track()
-# Append the track to the pattern
-pattern.append(track)
 # Instantiate a MIDI note on event, append it to the track
-on = midi.NoteOnEvent(tick=0, velocity=20, pitch=midi.G_3)
+on = midiio.NoteOnEvent(tick=0, velocity=20, pitch=midiio.G_3)
 track.append(on)
 # Instantiate a MIDI note off event, append it to the track
-off = midi.NoteOffEvent(tick=100, pitch=midi.G_3)
+off = midiio.NoteOffEvent(tick=100, pitch=midiio.G_3)
 track.append(off)
 # Add the end of track event, append it to the track
-eot = midi.EndOfTrackEvent(tick=1)
-track.append(eot)
+eot = midiio.EndOfTrackEvent(tick=1)
+# Instantiate a MIDI Track (contains a list of MIDI events)
+track = midiio.Track((on, off, eot))
+# Instantiate a MIDI Pattern (contains a list of tracks)
+pattern = midiio.Pattern((track,))
 # Print out the pattern
 print pattern
 # Save the pattern to disk
-midi.write_midifile("example.mid", pattern)
+midiio.write_midifile("example.mid", pattern)
 </pre>
 
 A MIDI file is represented as a hierarchical set of objects.  At the top is a
 Pattern, which contains a list of Tracks, and a Track is is a list of MIDI
 Events.
 
-The MIDI Pattern class inherits from the standard python list, so it supports
-all list features such as append(), extend(), slicing, and iteration.  Patterns
+The MIDI Pattern supports append(), extend(), slicing, and iteration. Patterns
 also contain global MIDI metadata: the resolution and MIDI Format.
 
-The MIDI Track class also inherits from the standard python list.  It does not
-have any special metadata like Pattern, but it does provide a few helper
-functions to manipulate all events within a track.
+The MIDI Track class does not have any special metadata like Pattern, but it
+does provide a few helper functions to manipulate all events within a track.
 
 There are 27 different MIDI Events supported.  In this example, three different
 MIDI events are created and added to the MIDI Track:
 
-# The NoteOnEvent captures the start of note, like a piano player pushing down on a piano key.  The tick is when this event occurred, the pitch is the note value of the key pressed, and the velocity represents how hard the key was pressed.
+The NoteOnEvent captures the start of note, like a piano player pushing down on
+a piano key.  The tick is when this event occurred, the pitch is the note value
+of the key pressed, and the velocity represents how hard the key was pressed.
 
-# The NoteOffEvent captures the end of note, just like a piano player removing her finger from a depressed piano key.  Once again, the tick is when this event occurred, the pitch is the note that is released, and the velocity has no real world analogy and is usually ignored.  NoteOnEvents with a velocity of zero are equivalent to NoteOffEvents.
+The NoteOffEvent captures the end of note, just like a piano player removing her
+finger from a depressed piano key. Once again, the tick is when this event
+occurred, the pitch is the note that is released, and the velocity has no real
+world analogy and is usually ignored. NoteOnEvents with a velocity of zero are
+equivalent to NoteOffEvents.
 
-# The EndOfTrackEvent is a special event, and is used to indicate to MIDI sequencing software when the song ends.  With creating Patterns with multiple Tracks, you only need one EndOfTrack event for the entire song.  Most MIDI software will refuse to load a MIDI file if it does not contain an EndOfTrack event.
+The EndOfTrackEvent is a special event, and is used to indicate to MIDI
+sequencing software when the song ends.  With creating Patterns with multiple
+Tracks, you only need one EndOfTrack event for the entire song.  Most MIDI
+software will refuse to load a MIDI file if it does not contain an EndOfTrack
+event.
 
 You might notice that the EndOfTrackEvent has a tick value of 1.  This is
 because MIDI represents ticks in relative time.  The actual tick offset of the
@@ -112,8 +117,8 @@ code to convert to microseconds looks like this:
 500000
 </pre>
 
-This says the Tempo is 500,000 microseconds per beat.  This, in combination
-with the Resolution, will allow you to convert ticks to time.  If there are
+This says the Tempo is 500,000 microseconds per beat. This, in combination
+with the Resolution, will allow you to convert ticks to time. If there are
 500,000 microseconds per beat, and if the Resolution is 1,000 than one tick is
 how much time?
 
@@ -124,11 +129,11 @@ how much time?
 0.00050000000000000001
 </pre>
 
-In other words, one tick represents .0005 seconds of time or half a
-millisecond.  Increase the Resolution and this number gets smaller, the inverse
-as the Resolution gets smaller.  Same for Tempo.
+In other words, one tick represents .0005 seconds of time or half a millisecond.
+Increase the Resolution and this number gets smaller, the inverse as the
+resolution gets smaller. Same for Tempo.
 
-Although MIDI encodes Time Signatures, it has no impact on the Tempo.  However,
+Although MIDI encodes Time Signatures, it has no impact on the Tempo. However,
 here is a quick refresher on Time Signatures:
 
 http://en.wikipedia.org/wiki/Time_signature
@@ -138,19 +143,18 @@ http://en.wikipedia.org/wiki/Time_signature
 It's just as easy to load your MIDI file from disk.
 
 <pre>
-import midi
-pattern = midi.read_midifile("example.mid")
+import midiio
+pattern = midiio.read_midifile("example.mid")
 print pattern
 </pre>
 
 ==History==
 
-This module is based on a fork of the [python-midi library](https://github.com/vishnubob/python-midi).
-and was started because the lacking Python 3 support. From the original module
-support for sequencing midi events was removed and it was slightly restructured.
+This module is based on a fork of the
+[python-midi library](https://github.com/vishnubob/python-midi) and was started
+because the lacking Python 3 support. From the original module support for
+sequencing midi events was removed and it was slightly restructured.
 
-The external API should have remained largely unchanged, but:
-* Meta events are consistently named XXXMetaEvent
 
 
 ==Website, support, bug tracking, development etc.==
