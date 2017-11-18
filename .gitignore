@@ -1,4 +1,7 @@
 build
 *.pyc
 
+MANIFEST
+dist
+
 mary.mid
