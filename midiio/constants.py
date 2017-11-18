@@ -35,7 +35,7 @@ for value in range( 128 ):
         NOTE_VALUE_MAP_SHARP.append( '%s_%d' % (name, octidx) )
         globals()['%s_%d' % (name, octidx)] = value
 
-BEATNAMES = ['whole', 'half', 'quarter', 'eighth', 'sixteenth', 'thiry-second', 'sixty-fourth']
+BEATNAMES = ['whole', 'half', 'quarter', 'eighth', 'sixteenth', 'thirtysecond', 'sixtyfourth']
 BEATVALUES = [4, 2, 1, .5, .25, .125, .0625]
 WHOLE = 0
 HALF = 1
