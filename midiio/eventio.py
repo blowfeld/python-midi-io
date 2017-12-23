@@ -194,12 +194,12 @@ class BinaryPitchWheelEvent(PitchWheelEvent):
 
     @classmethod
     def from_data(cls, tick, data, channel=0):
-        pitch = ((self.data[1] << 7) | self.data[0]) - 0x2000
+        pitch = ((data[1] << 7) | data[0]) - 0x2000
         return cls(tick, pitch, channel)
 
     @property
     def data(self):
-        value = pitch + 0x2000
+        value = self.pitch + 0x2000
 
         return (value & 0x7F, (value >> 7) & 0x7F)
 
@@ -226,7 +226,7 @@ class BinaryMetaEventMixin():
 class BinaryMetaEventWithTextMixin(BinaryMetaEventMixin):
     @classmethod
     def from_data(cls, tick, data):
-        text = ''.join(chr(datum) for datum in self.data)
+        text = ''.join(chr(datum) for datum in data)
         return cls(tick, text)
 
     @property
@@ -284,9 +284,9 @@ class BinarySetTempoMetaEvent(SetTempoMetaEvent, BinaryMetaEventMixin):
 
     @classmethod
     def from_data(cls, tick, data):
-        assert(len(data) == self.length)
+        assert(len(data) == cls.length)
 
-        vals = [data[x] << (16 - (8 * x)) for x in range(self.length)]
+        vals = [data[x] << (16 - (8 * x)) for x in range(cls.length)]
         micros_per_quarter = sum(vals)
 
         return cls(tick, micros_per_quarter)
